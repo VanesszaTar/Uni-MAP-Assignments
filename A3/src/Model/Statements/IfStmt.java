@@ -1,0 +1,47 @@
+package Model.Statements;
+
+import Model.ADT.IDictionary;
+import Model.ADT.IStack;
+import Model.Exceptions.MyException;
+import Model.Exceptions.UnknownOperator;
+import Model.Expressions.IExpression;
+import Model.PrgState;
+import Model.Types.BoolType;
+import Model.Values.BoolValue;
+import Model.Values.IValue;
+
+public class IfStmt implements IStmt {
+    private IExpression expr;
+    private IStmt thenStmt, elseStmt;
+
+    public IfStmt(IExpression expr, IStmt thenStmt, IStmt elseStmt) {
+        this.expr = expr;
+        this.thenStmt = thenStmt;
+        this.elseStmt = elseStmt;
+    }
+
+    @Override
+    public PrgState execute(PrgState prgState) throws MyException {
+        IDictionary<String, IValue> symTable = prgState.getSymTable();
+        IValue condition = expr.evaluate(symTable);
+        if (!condition.getType().equals(new BoolType()))
+            throw new UnknownOperator();
+        boolean b = ((BoolValue)condition).getValue();
+        IStack<IStmt> stack = prgState.getExeStack();
+        if (b)
+            stack.push(thenStmt);
+        else
+            stack.push(elseStmt);
+        return prgState;
+    }
+
+    @Override
+    public String toString(){
+        return "(IF" + expr.toString() + ") THEN(" + thenStmt.toString() + ") ELSE(" + elseStmt.toString() + "))";
+    }
+
+    @Override
+    public IStmt deepCopy() {
+        return new IfStmt(expr.deepCopy(), thenStmt.deepCopy(), elseStmt.deepCopy());
+    }
+}
